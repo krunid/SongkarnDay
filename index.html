@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมตอบคำถามวันสงกรานต์</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f9c5d1, #c2e9fb);
+            color: #333;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: #ff6f61;
+            padding: 10px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .navbar div {
+            font-size: 1.2em;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+            margin: 20px auto;
+            flex: 1;
+        }
+        h1 {
+            color: #ff6f61;
+        }
+        .question {
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+        .options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background: #ff6f61;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        .options button:hover {
+            background: #ff3b2f;
+        }
+        .timer {
+            font-size: 1.5em;
+            color: #333;
+        }
+        .score {
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            background: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress {
+            height: 10px;
+            background: #ff6f61;
+            width: 0;
+            transition: width 0.3s;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .popup table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .popup th, .popup td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .popup th {
+            background: #ff6f61;
+            color: white;
+        }
+        .popup tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .popup tr:hover {
+            background: #f1f1f1;
+        }
+        .emoji {
+            font-size: 1.5em;
+        }
+        footer {
+            background: #ff6f61;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            margin-top: auto;
+        }
+        .input-name {
+            padding: 10px;
+            font-size: 1em;
+            border: 2px solid #ff6f61;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 300px;
+            margin: 10px 0;
+        }
+        .input-name:focus {
+            outline: none;
+            border-color: #ff3b2f;
+        }
+        .instructions {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .instructions h3 {
+            color: #ff6f61;
+        }
+        .instructions ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div id="player-name-display"></div>
+        <div id="timer-display">เวลาเหลือ: 60 วินาที</div>
+        <div id="score-display">คะแนน: 0</div>
+    </div>
+    <div class="container">
+        <div id="start-screen">
+            <h1>เกมตอบคำถามวันสงกรานต์ 🎉</h1>
+            <div class="instructions">
+                <h3>วิธีเล่น</h3>
+                <ul>
+                    <li>กรอกชื่อของคุณในช่องด้านล่าง</li>
+                    <li>กดปุ่ม "เริ่มเกม" เพื่อเริ่มเล่น</li>
+                    <li>ตอบคำถามให้ถูกต้องและเร็วที่สุด</li>
+                    <li>แต่ละข้อมีเวลา 1 นาที</li>
+                    <li>ตอบถูกได้ 1 คะแนน ตอบผิดเสีย 1 คะแนน</li>
+                    <li>เมื่อจบเกมจะแสดงสรุปผลคะแนนและเวลา</li>
+                    <li>สามารถดูเฉลยและจัดอันดับได้</li>
+                </ul>
+            </div>
+            <p>บันทึกชื่อของคุณ:</p>
+            <input type="text" id="player-name" class="input-name" placeholder="ชื่อของคุณ">
+            <button onclick="startGame()">เริ่มเกม</button>
+        </div>
+        <div id="game-screen" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress" id="progress-bar"></div>
+            </div>
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+        </div>
+        <div id="end-screen" style="display: none;">
+            <h2>สรุปผลคะแนน</h2>
+            <p id="final-score"></p>
+            <button onclick="showAnswers()">เฉลย</button>
+            <button onclick="showRanking()">จัดอันดับ</button>
+            <button onclick="restartGame()">เริ่มเกมใหม่</button>
+        </div>
+    </div>
+
+    <div id="answers-popup" class="popup">
+        <h2>เฉลยคำตอบ</h2>
+        <table id="answers-table">
+            <tr>
+                <th>ข้อที่</th>
+                <th>คำตอบของคุณ</th>
+                <th>เฉลย</th>
+                <th>ผลลัพธ์</th>
+            </tr>
+        </table>
+        <button onclick="closePopup('answers-popup')">ปิด</button>
+    </div>
+
+    <div id="ranking-popup" class="popup">
+        <h2>จัดอันดับเวลา</h2>
+        <table id="ranking-table">
+            <tr>
+                <th>อันดับ</th>
+                <th>ชื่อ</th>
+                <th>เวลา (วินาที)</th>
+            </tr>
+        </table>
+        <button onclick="closePopup('ranking-popup')">ปิด</button>
+    </div>
+
+    <footer>
+        <p>จัดทำโดย ครูนิด ศิษย์หลวงพ่อเสือ</p>
+        <p>เขียนโค้ดโดย DeepSeek AI Chat</p>
+    </footer>
+
+    <script>
+        const questions = [
+            {
+                question: "วันสงกรานต์ตรงกับวันที่เท่าไหร่ของทุกปี?",
+                options: ["13 เมษายน", "14 เมษายน", "15 เมษายน", "16 เมษายน"],
+                answer: "13 เมษายน"
+            },
+            {
+                question: "วันสงกรานต์เป็นวันขึ้นปีใหม่ตามประเพณีของชาติใด?",
+                options: ["ไทย", "ลาว", "กัมพูชา", "ทั้งหมดถูก"],
+                answer: "ทั้งหมดถูก"
+            },
+            {
+                question: "กิจกรรมใดที่ไม่เกี่ยวข้องกับวันสงกรานต์?",
+                options: ["การทำบุญ", "การเล่นสาดน้ำ", "การจุดพลุ", "การรดน้ำดำหัว"],
+                answer: "การจุดพลุ"
+            },
+            {
+                question: "การรดน้ำดำหัวเป็นกิจกรรมที่ทำเพื่ออะไร?",
+                options: ["ขอพรจากผู้ใหญ่", "เล่นสนุก", "ทำบุญ", "ทั้งหมดถูก"],
+                answer: "ขอพรจากผู้ใหญ่"
+            },
+            {
+                question: "วันสงกรานต์มีอีกชื่อเรียกว่าอะไร?",
+                options: ["วันขึ้นปีใหม่", "วันน้ำ", "วันผู้สูงอายุ", "วันครอบครัว"],
+                answer: "วันขึ้นปีใหม่"
+            },
+            {
+                question: "สัตว์สัญลักษณ์ของวันสงกรานต์คืออะไร?",
+                options: ["ช้าง", "นก", "ปลา", "สิงโต"],
+                answer: "ช้าง"
+            },
+            {
+                question: "วันสงกรานต์เป็นวันหยุดราชการหรือไม่?",
+                options: ["ใช่", "ไม่ใช่"],
+                answer: "ใช่"
+            },
+            {
+                question: "อาหารที่นิยมรับประทานในวันสงกรานต์คืออะไร?",
+                options: ["ขนมจีน", "ข้าวเหนียว", "ส้มตำ", "ทั้งหมดถูก"],
+                answer: "ทั้งหมดถูก"
+            },
+            {
+                question: "วันสงกรานต์มีกี่วัน?",
+                options: ["1 วัน", "2 วัน", "3 วัน", "4 วัน"],
+                answer: "3 วัน"
+            },
+            {
+                question: "การสาดน้ำในวันสงกรานต์มีความหมายว่าอย่างไร?",
+                options: ["การทำความสะอาด", "การให้ความเย็น", "การขอพร", "ทั้งหมดถูก"],
+                answer: "ทั้งหมดถูก"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timeLeft = 60;
+        let timer;
+        let playerName = "";
+        let playerAnswers = [];
+        let startTime;
+
+        function startGame() {
+            playerName = document.getElementById("player-name").value;
+            if (!playerName) {
+                alert("กรุณากรอกชื่อของคุณ");
+                return;
+            }
+            document.getElementById("start-screen").style.display = "none";
+            document.getElementById("game-screen").style.display = "block";
+            document.getElementById("player-name-display").innerText = `ผู้เล่น: ${playerName}`;
+            startTime = new Date().getTime();
+            shuffleQuestions();
+            loadQuestion();
+            startTimer();
+            updateProgressBar();
+        }
+
+        function shuffleQuestions() {
+            questions.sort(() => Math.random() - 0.5);
+            questions.forEach(q => q.options.sort(() => Math.random() - 0.5));
+        }
+
+        function loadQuestion() {
+            const question = questions[currentQuestionIndex];
+            document.getElementById("question").innerText = question.question;
+            const optionsDiv = document.getElementById("options");
+            optionsDiv.innerHTML = "";
+            question.options.forEach(option => {
+                const button = document.createElement("button");
+                button.innerText = option;
+                button.onclick = () => checkAnswer(option);
+                optionsDiv.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedAnswer) {
+            const correctAnswer = questions[currentQuestionIndex].answer;
+            playerAnswers.push({
+                question: questions[currentQuestionIndex].question,
+                selectedAnswer: selectedAnswer,
+                correctAnswer: correctAnswer,
+                isCorrect: selectedAnswer === correctAnswer
+            });
+            if (selectedAnswer === correctAnswer) {
+                score += 1;
+            } else {
+                score -= 1;
+            }
+            document.getElementById("score-display").innerText = `คะแนน: ${score}`;
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+                updateProgressBar();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            clearInterval(timer);
+            document.getElementById("game-screen").style.display = "none";
+            document.getElementById("end-screen").style.display = "block";
+            const endTime = new Date().getTime();
+            const totalTime = Math.floor((endTime - startTime) / 1000);
+            document.getElementById("final-score").innerText = `คุณ ${playerName} ได้คะแนน ${score} คะแนน ในเวลา ${totalTime} วินาที`;
+
+            // บันทึกอันดับเมื่อจบเกม
+            saveRanking(playerName, totalTime);
+        }
+
+        function saveRanking(name, time) {
+            const ranking = JSON.parse(localStorage.getItem("ranking")) || [];
+            ranking.push({ name, time });
+            ranking.sort((a, b) => a.time - b.time); // เรียงลำดับตามเวลาที่น้อยที่สุด
+            localStorage.setItem("ranking", JSON.stringify(ranking));
+        }
+
+        function showRanking() {
+            const ranking = JSON.parse(localStorage.getItem("ranking")) || [];
+            const table = document.getElementById("ranking-table");
+            table.innerHTML = `
+                <tr>
+                    <th>อันดับ</th>
+                    <th>ชื่อ</th>
+                    <th>เวลา (วินาที)</th>
+                </tr>
+            `;
+            ranking.forEach((entry, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${entry.name}</td>
+                    <td>${entry.time}</td>
+                `;
+                table.appendChild(row);
+            });
+            document.getElementById("ranking-popup").style.display = "block";
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById("timer-display").innerText = `เวลาเหลือ: ${timeLeft} วินาที`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function updateProgressBar() {
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById("progress-bar").style.width = `${progress}%`;
+        }
+
+        function showAnswers() {
+            const table = document.getElementById("answers-table");
+            table.innerHTML = `
+                <tr>
+                    <th>ข้อที่</th>
+                    <th>คำตอบของคุณ</th>
+                    <th>เฉลย</th>
+                    <th>ผลลัพธ์</th>
+                </tr>
+            `;
+            playerAnswers.forEach((answer, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${answer.selectedAnswer}</td>
+                    <td>${answer.correctAnswer}</td>
+                    <td style="color: ${answer.isCorrect ? 'green' : 'red'}">${answer.isCorrect ? '✔' : '❌'}</td>
+                `;
+                table.appendChild(row);
+            });
+            document.getElementById("answers-popup").style.display = "block";
+        }
+
+        function closePopup(id) {
+            document.getElementById(id).style.display = "none";
+        }
+
+        function restartGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            timeLeft = 60;
+            playerAnswers = [];
+            document.getElementById("end-screen").style.display = "none";
+            document.getElementById("start-screen").style.display = "block";
+            document.getElementById("score-display").innerText = "คะแนน: 0";
+            document.getElementById("timer-display").innerText = "เวลาเหลือ: 60 วินาที";
+            document.getElementById("progress-bar").style.width = "0%";
+        }
+    </script>
+</body>
+</html>
